@@ -15,6 +15,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from pipeline.topic_taxonomy import canonical_topic, topic_catalog
 from pipeline.content_identity import content_fingerprint
@@ -188,7 +189,7 @@ def ingest_analysis(source_file: str, analysis_file: str, items: list[dict[str, 
     evidence_count = 0
     now = _now_text()
     with _connect() as conn:
-        run_id = _id("analysis", f"{analysis_file}:{now}")
+        run_id = f"analysis_{uuid4().hex}"
         for item in items:
             title = str(item.get("title") or "").strip()[:500]
             text = str(item.get("text") or "").strip()[:4000]
@@ -239,7 +240,7 @@ def ingest_analysis(source_file: str, analysis_file: str, items: list[dict[str, 
     sync = sync_obsidian()
     details = {"documents": len(set(document_ids)), "evidence": evidence_count, "trends": len(snapshots), "candidates": candidate_count, "obsidian": sync}
     with _connect() as conn:
-        conn.execute("INSERT INTO sync_runs VALUES (?, ?, ?, ?, ?)", (_id("run", f"analysis:{now}:{source_file}"), "analysis_ingest", "completed", _json(details), now))
+        conn.execute("INSERT INTO sync_runs VALUES (?, ?, ?, ?, ?)", (_id("run", run_id), "analysis_ingest", "completed", _json(details), now))
     return details
 
 

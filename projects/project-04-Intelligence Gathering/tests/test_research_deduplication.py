@@ -54,6 +54,15 @@ class ResearchDeduplicationTests(unittest.TestCase):
         self.ingest(2)
         self.assertEqual(self.count_documents(), 1)
 
+    def test_same_file_can_be_ingested_twice_in_one_second(self):
+        with patch.object(store, "_now_text", return_value="2026-11-01T12:00:00+00:00"):
+            self.ingest(1)
+            self.ingest(1)
+        self.assertEqual(self.count_documents(), 1)
+        with store._connect() as conn:
+            for table in ("analysis_runs", "crawl_observations", "sync_runs"):
+                self.assertEqual(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0], 2)
+
     def test_different_content_or_source_is_retained(self):
         self.ingest(1)
         self.ingest(2, text="Synthetic prompt injection defense.")

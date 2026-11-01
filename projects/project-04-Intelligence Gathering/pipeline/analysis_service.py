@@ -104,7 +104,7 @@ def _normalize(row: dict[str, Any]) -> dict[str, Any]:
         "author": author[:200],
         "source_url": url[:1000],
         "source_platform": _first(row, "__source_platform"),
-        "published_at": _first(row, "create_time", "publish_time", "time", "date"),
+        "published_at": _first(row, "published_at", "create_time", "publish_time", "time", "date"),
         "raw": row,
     }
 

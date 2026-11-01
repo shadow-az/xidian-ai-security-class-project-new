@@ -45,6 +45,13 @@ async def main() -> None:
     notes = list(vault.rglob("*.md"))
     with store._connect() as conn:
         before = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
+        documents = conn.execute("SELECT * FROM documents").fetchall()
+    for doc in documents:
+        original_row = originals[doc["source_url"]]
+        assert doc["title"] == original_row["title"]
+        assert doc["text"] == original_row["content"]
+        assert doc["published_at"] == original_row["published_at"]
+        assert any(doc["id"] in note.read_text(encoding="utf-8") for note in notes)
     for row in rows:
         assert any(row["source_url"] in note.read_text(encoding="utf-8") for note in notes), "Source missing from Markdown"
     # Exercise the real ingestion path again, with a distinct run identifier.
@@ -54,6 +61,7 @@ async def main() -> None:
         observations = conn.execute("SELECT COUNT(*) FROM crawl_observations").fetchone()[0]
     assert before == after == 2
     assert observations == 4
+    assert len(list(vault.rglob("*.md"))) == 2
     print(json.dumps({"input_count": 2, "output_count": len(rows), "ai_enabled": False,
                       "documents_before_repeat": before, "documents_after_repeat": after,
                       "observations": observations, "markdown_notes": len(list(vault.rglob('*.md'))),
