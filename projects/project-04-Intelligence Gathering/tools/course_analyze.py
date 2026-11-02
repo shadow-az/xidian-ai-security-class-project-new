@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import argparse
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 
 
-async def main() -> None:
+async def main(source_name: str) -> None:
     root = Path(__file__).resolve().parents[1]
     os.chdir(root)
     os.environ["AI_API_KEY"] = ""  # Rules only, even if a local key exists.
@@ -23,7 +24,8 @@ async def main() -> None:
 
     store.DATA_DIR = root / "data/course_validation" / stamp
     store.DB_PATH = store.DATA_DIR / "research.sqlite"
-    source = root / "data/github/jsonl/course_rag_security_20261101T110947104727Z.jsonl"
+    source = (root / "data" / source_name).resolve()
+    source.relative_to((root / "data").resolve())
     original = [json.loads(line) for line in source.read_text(encoding="utf-8").splitlines() if line.strip()]
     selected_names = {"CyberSunil/LLMVault", "olegnazarov/rag-security-scanner"}
     selected = [row for row in original if row["title"] in selected_names]
@@ -70,4 +72,7 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source", required=True, help="JSONL path relative to data/")
+    args = parser.parse_args()
+    asyncio.run(main(args.source))

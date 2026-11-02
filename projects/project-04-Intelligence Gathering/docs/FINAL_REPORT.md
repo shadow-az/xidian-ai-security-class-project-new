@@ -4,7 +4,7 @@
 
 ## 目标与范围
 
-围绕RAG安全与提示注入，复现公开资料采集、规则分析、SQLite入库、Markdown归档，并改进去重与来源溯源。基于课程原有平台二次开发，保留MediaCrawler版权与LICENSE。本文初版汇总此前实际结果，今日交付检查尚未执行，不宣称新增验证成功。
+围绕RAG安全与提示注入，复现公开资料采集、规则分析、SQLite入库、Markdown归档，并改进去重与来源溯源。基于课程原有平台二次开发，保留MediaCrawler版权与LICENSE。本文保留初版22b478c；以下补充2026-11-02实际交付核验结果。
 
 ## 环境与复现
 
@@ -17,10 +17,10 @@ python -m venv .venv
 .venv\Scripts\python.exe -m tools.course_smoke
 .venv\Scripts\python.exe -m tools.course_collect
 .venv\Scripts\python.exe -m pytest tests/test_analysis_provenance.py tests/test_research_deduplication.py -q
-.venv\Scripts\python.exe -m tools.course_analyze
+.venv\Scripts\python.exe -m tools.course_analyze --source github/jsonl/你的采集文件.jsonl
 ```
 
-本机WindowsApps的python占位入口不可用，应使用环境报告记录的真实解释器。采集与分析之间还存在历史文件路径依赖，交付核验时需要明确这一限制。
+本机WindowsApps的python占位入口不可用，应使用环境报告记录的真实解释器。分析入口现通过--source显式接收data目录下的JSONL文件。请使用采集命令实际输出的文件名；示例占位名必须替换，且目前要求输入包含已人工选择的两个来源。
 
 ## 已有实验结果
 
@@ -42,4 +42,17 @@ python -m venv .venv
 
 样本为GitHub仓库元数据及短描述，不是论文全文或工具效果验证。主题标签由作者提供，规则摘要和评分不构成安全结论。未调用模型、生成研究想法、运行扫描器、测试社交登录或AI Scientist。旧数据库不自动迁移合并。数据、知识库、日志、环境和密钥不提交。
 
-当前代码和阶段记录已交个人fork；最终交付检查结果待本轮核验补充。班级仓库PR尚未创建，需要本人明确授权。上游依赖锁文件安装与完整WebUI交互未验证。
+当前代码和阶段记录已交个人fork；本轮最终交付检查已通过，详见下表。班级仓库PR尚未创建，需要本人明确授权。上游依赖锁文件安装与完整WebUI交互未验证。
+
+## 2026-11-02交付核验
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 相关回归 | 9 passed |
+| pip check | No broken requirements found |
+| 真实服务检查 | 健康接口、首页HTML、采集环境均通过，端口61338，测试进程已停止 |
+| 参数化分析入口 | 显式指定实际JSONL后通过，输入输出各2条、数据库重复处理仍2文档、4观察、2笔记 |
+
+修订了分析入口写死历史文件名的问题；未提供--source时参数解析会拒绝执行，提供路径限定在data目录内。重新采集结果会变化，若不含本实验选定的两个来源应先重新人工筛选并调整实验选取范围，不能将无数据当作复现成功。原阶段文档中的无参数命令属于历史初版，当前复现以本文为准。
+
+基础课程流程与改进验证报告已完成。向班级仓库提交PR尚未授权，不能将个人fork推送等同于教师已接收作业。
