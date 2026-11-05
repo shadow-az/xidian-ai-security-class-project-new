@@ -1,0 +1,433 @@
+{
+  "experiment": "controlled_json_extraction_replay",
+  "environment": {
+    "python": "3.11.17",
+    "implementation": "CPython",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "third_party_dependencies": []
+  },
+  "repository_head": "59050346a73bb2aa4924f9af77d433efd033d22b",
+  "runner_sha256": "57131acf04199c6c9dc7a63660b46062a6f7c0c886264e869de9f29b00bb2096",
+  "provenance": {
+    "kind": "handwritten_controlled_examples",
+    "model": null,
+    "external_api_calls": 0,
+    "description": "人工构造的 Prepare Agent 文本样例，不是真实模型输出；只复用本地 benchmark 的一条参考文献标题，未联网核验文献或仓库。",
+    "evidence_file": "benchmark/final/vq/rotation_vq.json",
+    "evidence_pointer": "source_papers[0].reference",
+    "evidence_title": "Neural discrete representation learning"
+  },
+  "fixture_sha256": "11f7b78f32ef8429044234f17511cb7b2b4bf1a1be974fd5d23d3ac08bff5ab6",
+  "evidence_sha256": "47c5a7c8989ede9894b1bdeb011f4ab075f2eac9c8d8e3e30ae85b64db7ae95c",
+  "results": [
+    {
+      "source": {
+        "path": "research_agent/run_infer_idea.py",
+        "line": 2,
+        "source_sha256": "6fbae60802be64a7d22f2b73ff7f141f34c521a6664e1a21bb5dc8b6edcb2cde",
+        "implementation": {
+          "path": "research_agent/json_utils.py",
+          "line": 6,
+          "source_sha256": "9c97b386942d557ceb3aa45ac8a4ff6b5a15e789bf88daafb50d259236a18610"
+        },
+        "function_ast_sha256": "6d9f8d2b981b58572ff19f137b115fdbb9aff9853bbe920adb95d41138917735"
+      },
+      "summary": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0
+      },
+      "cases": [
+        {
+          "id": "plain_json",
+          "description": "普通 JSON 对象",
+          "passed": true,
+          "expected": {
+            "reference_codebases": [
+              "offline-reference"
+            ],
+            "reference_paths": [
+              "/workspace/offline-reference"
+            ],
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_codebases": [
+              "offline-reference"
+            ],
+            "reference_paths": [
+              "/workspace/offline-reference"
+            ],
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "fenced_json",
+          "description": "说明文字和 Markdown 代码围栏",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "nested_object",
+          "description": "嵌套字典与数组",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "plan": {
+              "metrics": [
+                "accuracy"
+              ],
+              "epochs": 2
+            }
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "plan": {
+              "metrics": [
+                "accuracy"
+              ],
+              "epochs": 2
+            }
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "closing_brace_in_string",
+          "description": "字符串内含右花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal } is part of this note."
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal } is part of this note."
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "opening_brace_in_string",
+          "description": "字符串内含左花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal { is part of this note."
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal { is part of this note."
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "escaped_quote_and_brace",
+          "description": "转义引号中的右花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "Quoted \"}\" remains text."
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "Quoted \"}\" remains text."
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "leading_closing_brace",
+          "description": "JSON 前的说明文字含孤立右花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "non_json_braces_prefix",
+          "description": "非 JSON 占位符后才是真实对象",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "truncated_json",
+          "description": "外层 JSON 截断，不能把内层对象冒充完整结果",
+          "passed": true,
+          "expected": {},
+          "actual": {},
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "no_json",
+          "description": "没有结构化结果的文本",
+          "passed": true,
+          "expected": {},
+          "actual": {},
+          "exception": null,
+          "stdout": ""
+        }
+      ]
+    },
+    {
+      "source": {
+        "path": "research_agent/run_infer_plan.py",
+        "line": 2,
+        "source_sha256": "cebf00b48c77a91e67e523dd089620aeffee7a416840fbe53806e1cfa4b3ec13",
+        "implementation": {
+          "path": "research_agent/json_utils.py",
+          "line": 6,
+          "source_sha256": "9c97b386942d557ceb3aa45ac8a4ff6b5a15e789bf88daafb50d259236a18610"
+        },
+        "function_ast_sha256": "6d9f8d2b981b58572ff19f137b115fdbb9aff9853bbe920adb95d41138917735"
+      },
+      "summary": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0
+      },
+      "cases": [
+        {
+          "id": "plain_json",
+          "description": "普通 JSON 对象",
+          "passed": true,
+          "expected": {
+            "reference_codebases": [
+              "offline-reference"
+            ],
+            "reference_paths": [
+              "/workspace/offline-reference"
+            ],
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_codebases": [
+              "offline-reference"
+            ],
+            "reference_paths": [
+              "/workspace/offline-reference"
+            ],
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "fenced_json",
+          "description": "说明文字和 Markdown 代码围栏",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "nested_object",
+          "description": "嵌套字典与数组",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "plan": {
+              "metrics": [
+                "accuracy"
+              ],
+              "epochs": 2
+            }
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "plan": {
+              "metrics": [
+                "accuracy"
+              ],
+              "epochs": 2
+            }
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "closing_brace_in_string",
+          "description": "字符串内含右花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal } is part of this note."
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal } is part of this note."
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "opening_brace_in_string",
+          "description": "字符串内含左花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal { is part of this note."
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "A literal { is part of this note."
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "escaped_quote_and_brace",
+          "description": "转义引号中的右花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "Quoted \"}\" remains text."
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ],
+            "note": "Quoted \"}\" remains text."
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "leading_closing_brace",
+          "description": "JSON 前的说明文字含孤立右花括号",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "non_json_braces_prefix",
+          "description": "非 JSON 占位符后才是真实对象",
+          "passed": true,
+          "expected": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "actual": {
+            "reference_papers": [
+              "Neural discrete representation learning"
+            ]
+          },
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "truncated_json",
+          "description": "外层 JSON 截断，不能把内层对象冒充完整结果",
+          "passed": true,
+          "expected": {},
+          "actual": {},
+          "exception": null,
+          "stdout": ""
+        },
+        {
+          "id": "no_json",
+          "description": "没有结构化结果的文本",
+          "passed": true,
+          "expected": {},
+          "actual": {},
+          "exception": null,
+          "stdout": ""
+        }
+      ]
+    }
+  ]
+}

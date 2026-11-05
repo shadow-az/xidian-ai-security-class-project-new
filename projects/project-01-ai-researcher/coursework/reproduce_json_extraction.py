@@ -1,7 +1,7 @@
-"""Replay controlled outputs against the real, unchanged source functions.
+"""Replay controlled outputs against the real source functions.
 
-Only the selected function's AST is loaded, avoiding unrelated LLM / Docker
-imports. This measures JSON extraction, not the complete research workflow.
+Only the selected function or its shared import is loaded, avoiding unrelated
+LLM / Docker imports. This measures extraction, not the complete workflow.
 """
 
 import argparse
@@ -17,6 +17,7 @@ import sys
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 SOURCES = (
     "research_agent/run_infer_idea.py",
     "research_agent/run_infer_plan.py",
@@ -28,24 +29,46 @@ def sha256(data):
 
 
 def load_extractor(relative_path):
-    """Execute the existing function verbatim, with its sole dependency json."""
+    """Load an entry point's local function or its actual shared import."""
     source_bytes = (PROJECT_ROOT / relative_path).read_bytes()
     source = source_bytes.decode("utf-8-sig")
     tree = ast.parse(source, filename=relative_path)
-    function = next(
+    binding = next(
         node for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-        and node.name == "extract_json_from_output"
+        if (
+            isinstance(node, ast.FunctionDef)
+            and node.name == "extract_json_from_output"
+        ) or (
+            isinstance(node, ast.ImportFrom)
+            and node.module == "research_agent.json_utils"
+            and any(alias.name == "extract_json_from_output" for alias in node.names)
+        )
     )
-    module = ast.Module(body=[function], type_ignores=[])
+    module = ast.Module(body=[binding], type_ignores=[])
     namespace = {"json": json}
     exec(compile(module, relative_path, "exec"), namespace)
-    return namespace[function.name], {
+    record = {
         "path": relative_path,
-        "line": function.lineno,
+        "line": binding.lineno,
         "source_sha256": sha256(source_bytes),
-        "function_ast_sha256": sha256(ast.dump(function).encode("utf-8")),
     }
+    function = binding
+    if isinstance(binding, ast.ImportFrom):
+        shared_path = "research_agent/json_utils.py"
+        shared_bytes = (PROJECT_ROOT / shared_path).read_bytes()
+        shared_tree = ast.parse(shared_bytes.decode("utf-8-sig"), filename=shared_path)
+        function = next(
+            node for node in shared_tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "extract_json_from_output"
+        )
+        record["implementation"] = {
+            "path": shared_path,
+            "line": function.lineno,
+            "source_sha256": sha256(shared_bytes),
+        }
+    record["function_ast_sha256"] = sha256(ast.dump(function).encode("utf-8"))
+    return namespace["extract_json_from_output"], record
 
 
 def run_case(extractor, case):
@@ -116,6 +139,7 @@ def main():
             "third_party_dependencies": [],
         },
         "repository_head": revision,
+        "runner_sha256": sha256(Path(__file__).read_bytes()),
         "provenance": fixture["provenance"],
         "fixture_sha256": sha256(fixture_bytes),
         "evidence_sha256": sha256(evidence_bytes),
