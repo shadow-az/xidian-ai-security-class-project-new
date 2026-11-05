@@ -6,9 +6,9 @@
 
 | 节点 | 交付内容 | 状态 |
 | --- | --- | --- |
-| ① 流程与基线 | 源码流程、环境版本、离线样例、原实现的结果 | 已完成 |
-| ② 目标修改 | 改进 JSON 提取，接入两个研究入口，对比修改前后 | 已完成，待用户 commit |
-| ③ 验证与分析 | 边界验证、证据关系分析、可复现步骤与局限 | 待补齐最终结果 |
+| ① 流程与基线 | 源码流程、环境版本、离线样例、原实现的结果 | 已提交：`5905034` |
+| ② 目标修改 | 改进 JSON 提取，接入两个研究入口，对比修改前后 | 已提交：`783a642` |
+| ③ 验证与分析 | 边界验证、证据关系分析、可复现步骤与局限 | 已完成，待用户 commit |
 
 
 ## 自动研究流程：源码追踪
@@ -61,29 +61,32 @@
 
 文件：
 
-- `reproduce_json_extraction.py`：从实际入口文件的 AST 中载入函数定义或共用函数的导入语句，再执行样例。不导入完整应用，也不读取 `.env`。
+- `reproduce_json_extraction.py`：从实际入口文件的 AST 中载入函数定义或共用函数的导入语句，再执行样例。支持从指定 Git 提交读取旧源码，不导入完整应用，也不读取 `.env`。
+- `verify_json_extraction.py`：一条命令重放旧版、当前版和边界样例，核对退出码、历史记录、源码与证据哈希。
 - `fixtures/json_extraction_cases.json`：10 条人工构造的输出文本、期望对象及来源说明。
+- `fixtures/json_extraction_boundaries.json`：20 条边界样例，含字段校验、标题对应关系和已知局限的预期行为。
 - `results/baseline.json`：节点①的环境、父提交、源码和样例 SHA-256、逐条结果与异常，保留原文件。
 - `results/after.json`：节点②在相同样例上的结果，另记录共用实现与复现脚本的 SHA-256。
+- `results/baseline-replay.json`、`results/after-replay.json`、`results/boundaries.json`：节点③重新执行得到的三组结果，不覆盖前两份记录。
 - `../research_agent/json_utils.py`：两个研究入口共用的 JSON 提取函数。
 
-以下命令记录节点①的运行方式，对应提交 `5905034`。当前代码已修复，复测请使用下文节点②的命令，避免覆盖原始基线。在课程仓库根目录打开 PowerShell：
+复现需要 Python 3.11+、Git，以及保留节点①提交 `5905034` 的本地仓库历史。以下命令从 Git 读取该提交中的旧函数，在当前环境和当前样例上执行；不会切换分支或改动工作区文件。在课程仓库根目录打开 PowerShell：
 
 ```powershell
 Set-Location 'projects/project-01-ai-researcher'
 $coursePython = Join-Path $env:APPDATA 'uv/python/cpython-3.11-windows-x86_64-none/python.exe'
 & $coursePython --version
-& $coursePython coursework/reproduce_json_extraction.py --output coursework/results/baseline.json
+& $coursePython coursework/reproduce_json_extraction.py --source-revision 5905034 --output coursework/results/baseline-replay.json --require-all
 ```
 
 其他电脑可使用自己安装的 Python 3.11+，例如：
 
 ```powershell
 python --version
-python coursework/reproduce_json_extraction.py --output coursework/results/baseline.json
+python coursework/reproduce_json_extraction.py --source-revision 5905034 --output coursework/results/baseline-replay.json --require-all
 ```
 
-以上命令必须在项目 01 目录执行。修复后使用新的结果文件名，保留原始基线。脚本默认返回 0 表示复现实验成功执行并写入记录，不表示所有样例通过。添加 `--require-all` 时，只要有样例失败就返回 1：
+旧版仍有 5 条样例失败，因此上述命令的预期退出码是 1。脚本默认返回 0 表示实验已执行并写入记录，不表示样例全部通过；添加 `--require-all` 后，样例不符合声明的预期就返回 1。以下命令检查当前工作区版本：
 
 ```powershell
 & $coursePython coursework/reproduce_json_extraction.py --output coursework/results/check.json --require-all
@@ -144,27 +147,85 @@ $LASTEXITCODE
 
 ```powershell
 $coursePython = Join-Path $env:APPDATA 'uv/python/cpython-3.11-windows-x86_64-none/python.exe'
-& $coursePython coursework/reproduce_json_extraction.py --output coursework/results/after.json --require-all
+& $coursePython coursework/reproduce_json_extraction.py --output coursework/results/after-replay.json --require-all
 $LASTEXITCODE
 ```
 
-其他电脑可用 Python 3.11+ 的 `python` 替代 `& $coursePython`。预期两个入口各输出 `10/10 matched expected behavior`，退出码为 0。节点②的结果文件记录父提交 `5905034`，实际待提交的代码版本由文件哈希补充标识。
+其他电脑可用 Python 3.11+ 的 `python` 替代 `& $coursePython`。预期两个入口各输出 `10/10 matched expected behavior`，退出码为 0。保留的节点②结果 `after.json` 记录父提交 `5905034`，当时待提交的代码由文件哈希补充标识；当前复测写入 `after-replay.json`。
 
 上述结果说明已修复这 10 个样例暴露的解析问题。样例数量和构造方式没有变化，不能据此估算真实模型输出的成功率，也没有测量性能或训练指标。
+
+## 节点③边界验证与复现
+新增样例检查更多输入，并分别记录解析结果、现有字段校验结果和标题与本地材料的对应关系。
+
+| 样例类别 | 数量 | 实测行为 |
+| --- | --- | --- |
+| 文本与 JSON 边界 | 10 | 空文本、纯空白、截断对象及未结束字符串返回 `{}`；中文、反斜杠、转义组合和对象内部数组按预期提取；非法候选后可继续找到合法对象；多个合法对象时取第一个 |
+| 已知局限 | 3 | 前面的空对象会阻止选择后面的完整业务对象；未闭合的说明前缀会阻止后续提取；数组外层不会被校验，其中的对象仍可能被提取 |
+| 输入类型约定 | 2 | `None` 和整数输入均抛出 `TypeError`，尚未提供容错或自动转换 |
+| 必填字段校验 | 3 | 缺少列表、空列表、列表内含纯空白字符串时，解析后的结果被 `validate_prepare_result` 拒绝 |
+| 标题与证据的对应 | 2 | 完整字段且标题在本地材料中时通过字段校验；标题不在该集合中时也会通过字段校验 |
+
+两个入口各 **20/20 符合声明的预期行为**。这里包含 3 条局限和 2 条预期异常，不表示 20 条输入都成功得到有效业务结果。没有为达到通过率而修改节点①的 10 条样例，也没有把这些边界观察当作新增功能。
+
+### 一条命令复验
+
+在项目 01 目录执行：
+
+```powershell
+$coursePython = Join-Path $env:APPDATA 'uv/python/cpython-3.11-windows-x86_64-none/python.exe'
+& $coursePython coursework/verify_json_extraction.py
+$LASTEXITCODE
+```
+
+其他电脑可执行 `python coursework/verify_json_extraction.py`。脚本依次完成三组运行并检查结果：
+
+| 运行 | 每个入口的预期结果 | 严格模式退出码 | 记录文件 |
+| --- | --- | --- | --- |
+| Git 中 `5905034` 的旧函数，原 10 条样例 | 5/10 | 1，属于预期基线失败 | `baseline-replay.json` |
+| 当前工作区函数，原 10 条样例 | 10/10 | 0 | `after-replay.json` |
+| 当前工作区函数，新增 20 条边界样例 | 20/20 行为符合预期 | 0 | `boundaries.json` |
+
+整个验证脚本预期退出码为 0。旧版输出中的 `FAIL` 是已知问题的重放；若旧版失败数量、当前版结果或历史记录对不上，验证脚本也会失败。
+
+脚本还会核对原样例和本地证据文件的 SHA-256、两版函数的 AST 哈希，以及重放结果中的对象和异常是否与节点①、②的记录一致。当前入口与共用模块的文件哈希也会检查。Git 可能转换换行符，因此旧函数以 AST 哈希和实际行为与原记录对照，不要求历史文件的原始字节与旧工作区完全相同。
+
+`--source-revision` 只替换解析函数和字段校验函数的源码，仍使用当前 Python、样例与本地证据文件；这不等于复原历史环境或完整研究流程。需要单独运行边界样例时：
+
+```powershell
+& $coursePython coursework/reproduce_json_extraction.py --fixture coursework/fixtures/json_extraction_boundaries.json --output coursework/results/boundaries.json --require-all
+```
+
+结果中的 `passed` 表示对象、预期异常及样例声明的分层检查是否一致；`prepare_validation.accepted` 表示现有业务字段校验是否接受结果；`reference_titles_match_local_evidence` 表示返回的标题是否都能与本地 `source_papers` 中的标题精确匹配，没有可比较标题时为 `null`。最后一项仅用于本次观察，没有接入实际研究流程。
 
 ## 检索证据、模型输出与结果：目前能说明什么
 
 完整流程中，检索结果提供候选论文与仓库；Prepare Agent 输出是对这些候选材料的选择；解析和字段校验决定后续能否取得参考材料；实现及真实运行才产生实验指标。各阶段需要分别核验。
 
-本次离线样例仅从 `benchmark/final/vq/rotation_vq.json` 的 `source_papers[0].reference` 读取一条标题作为可追踪的本地输入。脚本核对标题并记录该文件的哈希。这是课程已有材料的读取，没有执行在线检索；文件中的文献说明与结论也未在本次重新核验。`offline-reference` 及其路径都是实验占位符，没有下载对应仓库。
+本次离线样例仅从 `benchmark/final/vq/rotation_vq.json` 的 `source_papers[0].reference` 读取一条标题作为可追踪的本地输入。脚本核对标题并记录该文件的哈希。这是课程已有材料的读取，没有执行在线检索；文件中的文献说明与结论也未在本次重新核验。`offline-reference` 及其路径都是实验占位符。
 
 样例输出为人工构造，`model=null`，不是模型实际生成。实验结果来自两版解析函数的实际执行。部分样例只保留 `reference_papers` 以隔离语法问题，并不满足完整 Prepare Agent 的三个必填列表；本实验的通过标准也不代表能通过完整业务校验。
 
 对照结果表明：参考文献标题与本地输入一致时，原函数仍可能因为字符串内的括号而丢失整个对象；修复后，这几条样例中的标题和其他字段都能保留下来。这不能用来判断模型是否产生幻觉、检索证据是否可靠，或训练指标是否提高。`validate_prepare_result` 检查字段形状，不负责验证文献存在、候选来源一致性或实验结论。
 
+节点③进一步检查了这几层判断的区别。表中的“解析成功”仅指返回了预期的非空对象。
+
+| 受控输入 | 解析成功 | 字段校验接受 | 标题对应本地材料 | 能支持的判断 |
+| --- | --- | --- | --- | --- |
+| 三个列表完整，标题取自本地材料 | 是 | 是 | 是 | 格式可用，标题能与本地条目对应 |
+| 只有论文标题，缺少仓库和路径列表 | 是 | 否 | 是 | 标题有对应条目，但结果不满足后续字段要求 |
+| 三个列表完整，标题不在本地集合 | 是 | 是 | 否 | 字段校验不能发现来源不匹配 |
+| 数组包裹一个完整业务对象 | 是 | 是 | 是 | 现有解析和字段校验都没有约束最外层必须为对象 |
+
+“标题在本地集合中”只说明字符串能对应，不能证明模型真正阅读过材料、引用内容准确或结论成立；“不在集合中”也不能直接认定文献不存在。若要进一步判断，需要核验原文及具体引用位置。本次没有执行这一步。
+
+因此，本次修改的可测结果是：在固定的文本输入下，回退解析能保留此前丢失的字段，且没有改变已有字段校验的接受规则。实验结果仍限于模块返回值与异常。未调用模型，所以没有实际模型输出的质量评价；也没有训练数据、指标或运行记录支持研究方法有效性这一类结论。
+
 ## 验证范围与局限
 
 - 通过 AST 载入实际函数定义或共用函数的导入语句，隔离了 LLM、Docker、浏览器等无关依赖；未验证完整入口导入、缓存及 agent 上下文的集成行为。
-- 10 个刻意挑选的样例用于复现边界问题，样本量小且不是随机抽样；尚未统计真实模型输出分布。
+- 原 10 条回归样例和新增 20 条边界样例均为人工构造，样本量小且不是随机抽样；两个入口共用函数，也不能作为独立统计样本。尚未统计真实模型输出分布。
 - 没有模型 API 请求、在线文献或仓库检索，没有训练结果，也没有生成论文。项目自带 examples 的结果未当作本次结果。
-- 当前已完成同一组样例的修改前后对照。多个合法对象的取舍、更多转义组合及异常输入的边界验证留到节点③；尚未验证的行为不能算作已通过。
+- 已确认的限制包括取第一个合法对象、空对象提前返回、未闭合前缀阻止提取、数组外层未校验，以及非字符串参数抛出 `TypeError`。本节点记录这些行为，没有扩展解析规则。
+- 仅在当前 Windows、CPython 3.11.17 环境实际运行；其他系统和解释器版本按所给步骤复测，尚无本次跨平台验证结果。未测量性能，也未验证超长输入和极深嵌套下的资源消耗。
+- 本地标题的精确匹配只是来源对应关系的观察，不是文献真实性、引用准确性或实验可复现性的证明。本次没有新增文献来源核验或实验结果校验机制。
