@@ -1,0 +1,89 @@
+{
+  "provenance": {
+    "kind": "handwritten_controlled_examples",
+    "model": null,
+    "external_api_calls": 0,
+    "description": "人工构造的 Prepare Agent 文本样例，不是真实模型输出；只复用本地 benchmark 的一条参考文献标题，未联网核验文献或仓库。",
+    "evidence_file": "benchmark/final/vq/rotation_vq.json",
+    "evidence_pointer": "source_papers[0].reference",
+    "evidence_title": "Neural discrete representation learning"
+  },
+  "cases": [
+    {
+      "id": "plain_json",
+      "description": "普通 JSON 对象",
+      "output_text": "{\"reference_codebases\":[\"offline-reference\"],\"reference_paths\":[\"/workspace/offline-reference\"],\"reference_papers\":[\"Neural discrete representation learning\"]}",
+      "expected": {
+        "reference_codebases": ["offline-reference"],
+        "reference_paths": ["/workspace/offline-reference"],
+        "reference_papers": ["Neural discrete representation learning"]
+      }
+    },
+    {
+      "id": "fenced_json",
+      "description": "说明文字和 Markdown 代码围栏",
+      "output_text": "Prepared references:\n```json\n{\"reference_papers\":[\"Neural discrete representation learning\"]}\n```\nEnd.",
+      "expected": {"reference_papers": ["Neural discrete representation learning"]}
+    },
+    {
+      "id": "nested_object",
+      "description": "嵌套字典与数组",
+      "output_text": "{\"reference_papers\":[\"Neural discrete representation learning\"],\"plan\":{\"metrics\":[\"accuracy\"],\"epochs\":2}}",
+      "expected": {
+        "reference_papers": ["Neural discrete representation learning"],
+        "plan": {"metrics": ["accuracy"], "epochs": 2}
+      }
+    },
+    {
+      "id": "closing_brace_in_string",
+      "description": "字符串内含右花括号",
+      "output_text": "{\"reference_papers\":[\"Neural discrete representation learning\"],\"note\":\"A literal } is part of this note.\"}",
+      "expected": {
+        "reference_papers": ["Neural discrete representation learning"],
+        "note": "A literal } is part of this note."
+      }
+    },
+    {
+      "id": "opening_brace_in_string",
+      "description": "字符串内含左花括号",
+      "output_text": "{\"reference_papers\":[\"Neural discrete representation learning\"],\"note\":\"A literal { is part of this note.\"}",
+      "expected": {
+        "reference_papers": ["Neural discrete representation learning"],
+        "note": "A literal { is part of this note."
+      }
+    },
+    {
+      "id": "escaped_quote_and_brace",
+      "description": "转义引号中的右花括号",
+      "output_text": "{\"reference_papers\":[\"Neural discrete representation learning\"],\"note\":\"Quoted \\\"}\\\" remains text.\"}",
+      "expected": {
+        "reference_papers": ["Neural discrete representation learning"],
+        "note": "Quoted \"}\" remains text."
+      }
+    },
+    {
+      "id": "leading_closing_brace",
+      "description": "JSON 前的说明文字含孤立右花括号",
+      "output_text": "A stray } precedes the result.\n{\"reference_papers\":[\"Neural discrete representation learning\"]}",
+      "expected": {"reference_papers": ["Neural discrete representation learning"]}
+    },
+    {
+      "id": "non_json_braces_prefix",
+      "description": "非 JSON 占位符后才是真实对象",
+      "output_text": "Template {placeholder}; prepared result:\n{\"reference_papers\":[\"Neural discrete representation learning\"]}",
+      "expected": {"reference_papers": ["Neural discrete representation learning"]}
+    },
+    {
+      "id": "truncated_json",
+      "description": "外层 JSON 截断，不能把内层对象冒充完整结果",
+      "output_text": "{\"reference_papers\":[\"Neural discrete representation learning\"],\"plan\":{\"epochs\":2}",
+      "expected": {}
+    },
+    {
+      "id": "no_json",
+      "description": "没有结构化结果的文本",
+      "output_text": "Preparation is incomplete; no references have been selected.",
+      "expected": {}
+    }
+  ]
+}
